@@ -1,6 +1,7 @@
 let ticTacToe;
 const playerOne = '\u25EF'
 const playerTwo = '\u2716'
+const playerAi = playerTwo
 
 if (typeof window != "undefined") {
     window.onload = function () {
@@ -38,27 +39,58 @@ function TicTacToe(grid) {
     }
 
     this.get = function (row, column) {
-        console.log(row + '_' + column)
+        console.log('Get cell (' + row + '_' + column + ')')
         return document.getElementById(row + '_' + column).textContent
     }
 
+    this.set = function (row, column, player) {
+        console.log('Set cell (' + row + '_' + column + ') with ' + player)
+        document.getElementById(row + '_' + column).innerText = player
+    }
+
     this.checkIfAnyWin = function () {
+        let isWin
         for (let row = 1; row <= 3; row++) {
-            this.checkHorizontalRow(row, playerOne)
+            const isWin = this.checkHorizontalRow(row, playerOne)
+            if (isWin) {
+                return true;
+            }
         }
         for (let row = 1; row <= 3; row++) {
-            this.checkHorizontalRow(row, playerTwo)
+            isWin = this.checkHorizontalRow(row, playerTwo)
+            if (isWin) {
+                return true;
+            }
         }
         for (let column = 1; column <= 3; column++) {
-            this.checkVerticalColumn(column, playerOne)
+            isWin = this.checkVerticalColumn(column, playerOne)
+            if (isWin) {
+                return true;
+            }
         }
         for (let column = 1; column <= 3; column++) {
-            this.checkVerticalColumn(column, playerTwo)
+            isWin = this.checkVerticalColumn(column, playerTwo)
+            if (isWin) {
+                return true;
+            }
         }
-        this.checkRightDiagonal(playerOne)
-        this.checkRightDiagonal(playerTwo)
-        this.checkLeftDiagonal(playerOne)
-        this.checkLeftDiagonal(playerTwo)
+        isWin = this.checkRightDiagonal(playerOne)
+        if (isWin) {
+            return true;
+        }
+        isWin = this.checkRightDiagonal(playerTwo)
+        if (isWin) {
+            return true;
+        }
+        isWin = this.checkLeftDiagonal(playerOne)
+        if (isWin) {
+            return true;
+        }
+        isWin = this.checkLeftDiagonal(playerTwo)
+        if (isWin) {
+            return true;
+        }
+        return false;
     }
 
     this.checkRightDiagonal = function (player) {
@@ -94,7 +126,10 @@ function TicTacToe(grid) {
             this.get(row, 3) === player) {
             this.setHorizontalRowWin(row)
             this.win(player)
+
+            return true
         }
+        return false
     }
 
     this.checkVerticalColumn = function (column, player) {
@@ -122,7 +157,8 @@ function TicTacToe(grid) {
     }
 
     this.choose = function (event, element) {
-        if (!this.isFinised) {
+
+        if (!this.isFinised && !element.innerText) {
             const position = element.id.split('_')
             console.log("Row: " + position[0] + " Column: " + position[1])
             if (this.lastMove === playerTwo ) {
@@ -132,9 +168,23 @@ function TicTacToe(grid) {
                 element.innerText = playerTwo
                 this.lastMove = playerTwo
             }
-            this.checkIfAnyWin()
+            const isWin = this.checkIfAnyWin()
+            if (playerAi) {
+                this.lastMove = playerAi
+                this.aiMove()
+            }
         }
     }
 
+    this.aiMove = function () {
+        for (let i = 1; i <= 3; i++) {
+            for (let j = 1; j <= 3; j++) {
+                if (!this.get(i, j)) {
+                    this.set(i, j, playerAi)
+                    return
+                }
+            }
+        }
+    }
 
 }
