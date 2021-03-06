@@ -1,6 +1,8 @@
+// import _ from "lodash" // Import the entire lodash library
+
 let ticTacToe;
-const playerOne = '\u25EF'
-const playerTwo = '\u2716'
+const playerOne = '\u2716' // X
+const playerTwo = '\u25EF' // O
 const playerAi = playerTwo
 
 if (typeof window != "undefined") {
@@ -176,15 +178,103 @@ function TicTacToe(grid) {
         }
     }
 
+    this.getBoard = function () {
+        let board = Array.from(Array(3), () => new Array(3))
+        for (let r = 1; r <= 3; r++) {
+            for (let c = 1; c <= 3; c++) {
+                board[r - 1][c - 1] = this.get(r, c)
+            }
+        }
+        return board
+    }
+
     this.aiMove = function () {
-        for (let i = 1; i <= 3; i++) {
-            for (let j = 1; j <= 3; j++) {
-                if (!this.get(i, j)) {
-                    this.set(i, j, playerAi)
-                    return
+        let board = this.getBoard()
+        for (let r = 1; r <= 3; r++) {
+            for (let c = 1; c <= 3; c++) {
+                if (!board[r - 1][c - 1]) {
+                    let nextBoard = _.cloneDeep(board)
+                    nextBoard[r - 1][c - 1] = playerAi
+                    let result = this.getScore(nextBoard)
+                    if (!result) {
+                        result = this.minMaxScore(nextBoard, playerOne === playerAi ? playerTwo : playerOne)
+                    }
+                    this.set(r, c, typeof result !== 'undefined' ? '"' + result + '"' : '"U"')
+                    // if (result === 1) {
+                    //
+                    // }
                 }
             }
         }
     }
 
+    this.minMaxScore = function (board, player) {
+        let result
+        let undefinedCells = []
+        for (let r = 0; r < 3; r++) {
+            for (let c = 0; c < 3; c++) {
+                if (board[r][c] === '' || board[r][c].startsWith('"')) {
+                    let nextBoard = _.cloneDeep(board)
+                    nextBoard[r][c] = player
+                    let nextResult = this.getScore(nextBoard)
+                    if (typeof nextResult === 'undefined') {
+                        undefinedCells.push({ row: r, column: c })
+                        continue
+                    }
+                    if (player !== playerAi) {
+                        result = result ? Math.min(result, nextResult) : nextResult
+                        if (result === -1) {
+                            return -1
+                        }
+                    } else {
+                        result = result ? Math.max(result, nextResult) : nextResult
+                        if (result === 1) {
+                            return 1
+                        }
+                    }
+                }
+            }
+        }
+        if (undefinedCells.length === 0) {
+            return result
+        }
+        // TODO define all undefined
+    }
+
+    this.isWin = function (board, player) {
+        if (board[0][0] === player && board[1][1] === player && board[2][2] === player) {
+            return true
+        }
+        if (board[0][2] === player && board[1][1] === player && board[2][0] === player) {
+            return true
+        }
+        for (let i = 0; i < 3; i++) {
+            if (board[i][0] === player && board[i][1] === player && board[i][2] === player) {
+                return true
+            }
+        }
+        for (let i = 0; i < 3; i++) {
+            if (board[0][i] === player && board[1][i] === player && board[2][i] === player) {
+                return true
+            }
+        }
+        return false;
+    }
+
+    this.getScore = function (board) {
+        if (this.isWin(board, playerAi)) {
+            return 1
+        }
+        if (this.isWin(board, playerAi)) {
+            return -1
+        }
+        for (let r = 1; r <= 3; r++) {
+            for (let c = 1; c <= 3; c++) {
+                if (board[r - 1][c - 1] === '') {
+                    return undefined
+                }
+            }
+        }
+        return 0;
+    }
 }
