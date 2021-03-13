@@ -3,20 +3,53 @@
 let ticTacToe;
 const playerOne = '\u25EF' // O
 const playerTwo = '\u2716' // X
-const playerAi = playerTwo
+let playerAi = playerTwo
 
 if (typeof window != "undefined") {
     window.onload = function () {
         const gridContainer = document.getElementById("tic-tac-toe-grid-container");
         // Initialize Empty grid
         ticTacToe = new TicTacToe(gridContainer);
+        document.getElementById('human-ai').checked = true
     };
 }
 
 function TicTacToe(grid) {
     this.container = grid
-    this.isFinised = false;
+    this.isFinised = false
     this.lastMove = playerTwo
+    this.isShowHint = false
+
+    this.removeWin = function (row, column) {
+        const element = document.getElementById(row + '_' + column)
+        element.setAttribute('class', element.className.replace(' win', ''))
+    }
+
+    this.clear = function () {
+        document.getElementById("result").innerText = ''
+        for (let r = 1; r <= 3; r++) {
+            for (let c = 1; c <= 3; c++) {
+                this.set(r, c, '')
+                this.removeWin(r, c)
+            }
+        }
+        this.isFinised = false
+        this.lastMove = playerTwo
+        if (document.getElementById("human-ai").checked) {
+            playerAi = playerTwo
+        } else if (document.getElementById("ai-human").checked) {
+            playerAi = playerOne
+            this.set(2, 2, playerAi)
+            this.lastMove = playerAi
+        } else if (document.getElementById("human-human").checked) {
+            playerAi = null
+            this.aiMove()
+        }
+    }
+
+    this.clickHint = function () {
+        this.isShowHint = document.getElementById("hint").checked
+    }
 
     this.win = function (player) {
         document.getElementById("result").innerText = player + ' win'
@@ -142,7 +175,7 @@ function TicTacToe(grid) {
                 this.lastMove = playerTwo
             }
             this.checkIfAnyWin()
-            if (!this.isFinised && playerAi && this.lastMove !== playerAi) {
+            if (!this.isFinised) {
                 this.aiMove()
             }
         }
@@ -163,22 +196,30 @@ function TicTacToe(grid) {
         let result
         let bestMove = {}
         let board = this.getBoard()
+        let isAiMakeMove = false
+        const player = this.lastMove === playerOne ? playerTwo : playerOne
+        const nextPlayer = playerOne === player ? playerTwo : playerOne
         for (let r = 1; r <= 3; r++) {
             for (let c = 1; c <= 3; c++) {
                 if (!board[r - 1][c - 1]) {
                     let nextBoard = _.cloneDeep(board)
-                    nextBoard[r - 1][c - 1] = playerAi
+                    nextBoard[r - 1][c - 1] = player
                     let nextResult = this.getScore(nextBoard)
-                    if (nextResult === 1) {
+                    if (nextResult === 1 && playerAi && this.lastMove !== playerAi && !isAiMakeMove) {
                         this.set(r, c, playerAi)
                         this.lastMove = playerAi
                         this.checkIfAnyWin()
-                        return
+                        isAiMakeMove = true
+                        if (!this.isShowHint) {
+                            return
+                        }
                     }
                     if (typeof nextResult === 'undefined') {
-                        nextResult = this.minMaxScore(nextBoard, playerOne === playerAi ? playerTwo : playerOne)
+                        nextResult = this.minMaxScore(nextBoard, nextPlayer)
                     }
-                    // this.set(r, c, '"' + nextResult + '"')
+                    if (this.isShowHint) {
+                        this.set(r, c, '"' + nextResult + '"')
+                    }
                     if (typeof result === 'undefined' || nextResult > result) {
                         result = nextResult
                         bestMove = { row: r, column: c }
@@ -186,7 +227,7 @@ function TicTacToe(grid) {
                 }
             }
         }
-        if (typeof result !== 'undefined') {
+        if (typeof result !== 'undefined' && playerAi) {
             this.set(bestMove.row, bestMove.column, playerAi)
             this.lastMove = playerAi
             this.checkIfAnyWin()
@@ -196,6 +237,9 @@ function TicTacToe(grid) {
     this.minMaxScore = function (board, player) {
         let result
         let undefinedCells = []
+        const playerMaxScore = playerAi ? playerAi : playerOne
+        const playerMinScore = playerMaxScore === playerOne ? playerTwo : playerOne
+
         for (let r = 0; r < 3; r++) {
             for (let c = 0; c < 3; c++) {
                 if (board[r][c] === '' || board[r][c].startsWith('"')) {
@@ -206,7 +250,7 @@ function TicTacToe(grid) {
                         undefinedCells.push({ row: r, column: c })
                         continue
                     }
-                    if (player !== playerAi) {
+                    if (player === playerMinScore) {
                         result = typeof result !== 'undefined' ? Math.min(result, nextResult) : nextResult
                         if (result === -1) {
                             return -1
@@ -231,7 +275,7 @@ function TicTacToe(grid) {
             nextBoard[nextMove.row][nextMove.column] = player
             let nextResult = this.minMaxScore(nextBoard, nextPlayer)
             if (typeof nextResult !== 'undefined') {
-                if (player !== playerAi) {
+                if (player === playerMinScore) {
                     result = typeof result !== 'undefined' ? Math.min(result, nextResult) : nextResult
                     if (result === -1) {
                         return -1
@@ -268,10 +312,12 @@ function TicTacToe(grid) {
     }
 
     this.getScore = function (board) {
-        if (this.isWin(board, playerAi)) {
+        const playerMaxScore = playerAi ? playerAi : playerOne
+        const playerMinScore = playerMaxScore === playerOne ? playerTwo : playerOne
+        if (this.isWin(board, playerMaxScore)) {
             return 1
         }
-        if (this.isWin(board, playerOne === playerAi ? playerTwo : playerOne)) {
+        if (this.isWin(board, playerMinScore)) {
             return -1
         }
         for (let r = 1; r <= 3; r++) {
