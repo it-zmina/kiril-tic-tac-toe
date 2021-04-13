@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Calculator with four basic operations.</title>
-    <link rel="stylesheet" type="text/css" href="calculator.css">
+    <link rel="stylesheet" type="text/css" href="tic-tac-toe.css">
     <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
     <script src="tic-tac-toe.js"></script>
 </head>
@@ -18,8 +18,9 @@
             <input type="radio" id="human-human" name="mode" value="Human-Human" onchange="ticTacToe.clear()">
             <label for="human-human">H-H</label>
             <div class="button" onclick="ticTacToe.clear()">Play<br>again</div>
-            <input type="checkbox" id="hint" name="mode" value="show-hint" onchange="ticTacToe.clickHint()">
-            <label for="hint">Hint</label>
+<!--            For explaining min-max algorithm -->
+<!--            <input type="checkbox" id="hint" name="mode" value="show-hint" onchange="ticTacToe.clickHint()" hidden>-->
+<!--            <label for="hint">Hint</label>-->
         </div>
         <div class="container horizontal">
             <div class="item result">
